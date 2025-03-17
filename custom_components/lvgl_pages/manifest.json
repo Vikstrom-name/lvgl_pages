@@ -1,0 +1,11 @@
+{
+  "domain": "lvgl_pages",
+  "name": "LVGL Pages",
+  "codeowners": ["@dala318"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/dala318/lvgl_pages",
+  "issue_tracker": "https://github.com/dala318/lvgl_pages/issues",
+  "requirements": [],
+  "version": "0.0.1"
+}

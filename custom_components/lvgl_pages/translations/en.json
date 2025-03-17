@@ -1,0 +1,19 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Setup LVGL Pages",
+                "data": {
+                    "name": "Name of page config"
+                }
+            }
+        },
+        "error": {
+            "name_exists": "Name already exists",
+            "invalid_template": "The template is invalid"
+        },
+        "abort": {
+            "already_configured": "Already configured with the same settings or name"
+          }
+    }
+}
