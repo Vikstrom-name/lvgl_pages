@@ -2,7 +2,7 @@
 
 from unittest import mock
 
-from custom_components.lvgl_pages import LvglPages
+from custom_components.lvgl_pages import LvglPagesCoordinator
 
 # from pytest_homeassistant_custom_component.async_mock import patch
 # from pytest_homeassistant_custom_component.common import (
@@ -61,6 +61,6 @@ async def test_pages_init(hass):
     #     """Set up test sensor platform via config entry."""
     #     async_add_entities([np_sensor])
 
-    pages = LvglPages(hass, CONF_ENTRY)
+    pages = LvglPagesCoordinator(hass, CONF_ENTRY)
 
     assert pages.name == NAME
