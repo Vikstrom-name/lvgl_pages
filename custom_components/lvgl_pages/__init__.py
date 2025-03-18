@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         hass.data[DOMAIN] = {}
 
     if config_entry.entry_id not in hass.data[DOMAIN]:
-        pages = LvglPages(hass, config_entry)
+        pages = LvglPagesCoordinator(hass, config_entry)
         await pages.async_setup()
         hass.data[DOMAIN][config_entry.entry_id] = pages
 
@@ -57,7 +57,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         pages = hass.data[DOMAIN].pop(entry.entry_id)
-        pages.cleanup()
+        # pages.cleanup()
     return unload_ok
 
 
@@ -122,10 +122,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
-class LvglPages:
-    """LVGL Pages base class."""
-
-    _hourly_update = None
+class LvglPagesCoordinator:
+    """LVGL Pages coordinator class."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize my coordinator."""

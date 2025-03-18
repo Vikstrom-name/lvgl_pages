@@ -10,3 +10,9 @@ class PageTypes(Enum):
 
     Flex = 0
     Grid = 1
+
+
+class WidgetTypes(Enum):
+    """Standard numeric identifiers for widget types."""
+
+    Button = 0
