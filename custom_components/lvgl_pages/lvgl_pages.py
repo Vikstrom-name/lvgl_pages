@@ -8,7 +8,7 @@ import yaml
 
 _LOGGER = logging.getLogger(__name__)
 
-try:
+try:  # Local import differs if run from console or imported in HA
     from .const import PageTypes, WidgetTypes
 except ImportError:
     _LOGGER.error("Import error from context")
@@ -17,6 +17,12 @@ except ImportError:
     except ImportError:
         _LOGGER.error("Import error from local")
         raise
+
+
+def dict_to_yaml_str(config: dict) -> str:
+    """Convert a dictionary to a YAML string."""
+    yaml.Dumper.ignore_aliases = lambda *args: True
+    return yaml.dump(config, allow_unicode=True)
 
 
 class Widget:
@@ -33,7 +39,6 @@ class Widget:
         self._text = text
         self._icon = icon
         self._icon_font = "lv_font_montserrat_24"
-        # self._config["UID"] = uuid.uuid4()[:8]
 
     def add_config(self, config: dict):
         """Add a configuration to the widget."""
@@ -41,12 +46,6 @@ class Widget:
 
     def get_lvgl(self) -> dict:
         """Return the configuration of the widget."""
-        # vars:
-        #     uid:
-        #     height:
-        #     text:
-        #     icon:
-        #     entity_id:
         widget = {
             "height": self._height,
             "id": f"button_{self._uid}",
@@ -101,6 +100,7 @@ class Page:
             {"lvgl.page.previous": {"animation": "OUT_LEFT", "time": "300ms"}},
         ],
     }
+    #   on_swipe_right:
     #       - lambda: 'lv_indev_wait_release(lv_indev_get_act());'
     #       - logger.log: "Swipe right"
     #       - lvgl.page.next:
@@ -159,14 +159,6 @@ class Page:
             )  # ToDo: Make this a reusable object reference in yaml
         return page
 
-    # def as_dict(self):
-    #     """Return the page as a dictionary."""
-    #     return {
-    #         "id": self.page_id,
-    #         "type": self.page_type,
-    #         "widgets": [w.as_dict() for w in self.widgets],
-    #     }
-
 
 class LvglPages:
     """LVGL Pages base class."""
@@ -175,28 +167,25 @@ class LvglPages:
 
     # def __init__(self) -> None:
     #     """Initialize coordinator."""
-    #     pass
-    #     # self.page_index = 0
 
     def new_page(self, page_id: str, **kwargs) -> Page:
         """Add a new page."""
         if not page_id:
-            raise ValueError("Page ID is required and be not empty.")
-        if len(self._pages) > 0 and [p for p in self._pages if p.page_id == page_id]:
+            raise ValueError("Page ID is required and not empty.")
+        if [p for p in self._pages if p.page_id == page_id]:
             raise ValueError(f"Page {page_id} already exists.")
         page = Page(page_id, **kwargs)
         self._pages.append(page)
         return page
 
-    def get_lvgl(self) -> str:
+    def get_all_lvgl(self) -> str:
         """Return the LVGL Pages as a YAML string."""
         output_data = {"pages": []}
         for page in self._pages:
             output_data["pages"].append(page.get_lvgl(multi_page=len(self._pages) > 1))
-        yaml.Dumper.ignore_aliases = lambda *args: True
-        return yaml.dump(output_data, allow_unicode=True)
+        return dict_to_yaml_str(output_data)
 
-    # def get_lights(self) -> str:
+    # def get_all_lights(self) -> str:
     #     """Return the lights."""
     #     return ""
 
@@ -226,4 +215,4 @@ if __name__ == "__main__":
         text="Toggle",
         icon="mdi:lightbulb",
     )
-    _LOGGER.info(lvgl_pages.get_lvgl())
+    _LOGGER.info(lvgl_pages.get_all_lvgl())
