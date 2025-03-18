@@ -12,7 +12,8 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    # OptionsFlow,
+    OptionsFlow,
+    callback,
 )
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.helpers.selector import (
@@ -86,29 +87,41 @@ class LvglPagesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> LvglPagesOptionsFlow:
+        """Create the options flow."""
+        return LvglPagesOptionsFlow(config_entry)
 
-# class LvglPagesOptionsFlow(OptionsFlow):
-#     """Handle File options."""
 
-#     async def async_step_init(
-#         self, user_input: dict[str, Any] | None = None
-#     ) -> ConfigFlowResult:
-#         """Manage File options."""
-#         if user_input:
-#             return self.async_create_entry(data=user_input)
+class LvglPagesOptionsFlow(OptionsFlow):
+    """Handle File options."""
 
-#         schema = vol.Schema(
-#             {
-#                 # vol.Required(CONF_NAME): str,
-#                 vol.Required(CONF_FILE_PATH): TextSelector(
-#                     TextSelectorConfig(type=TextSelectorType.TEXT)
-#                 ),
-#             }
-#         )
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize the options flow."""
+        self.config_entry = config_entry
 
-#         return self.async_show_form(
-#             step_id="init",
-#             data_schema=self.add_suggested_values_to_schema(
-#                 schema, self.config_entry.options or {}
-#             ),
-#         )
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage File options."""
+        if user_input:
+            return self.async_create_entry(data=user_input)
+
+        schema = vol.Schema(
+            {
+                # vol.Required(CONF_NAME): str,
+                vol.Required(CONF_FILE_PATH): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                schema, self.config_entry.options or {}
+            ),
+        )
