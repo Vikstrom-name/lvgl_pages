@@ -2,57 +2,80 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 import logging
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.const import ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import selector, template
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    # OptionsFlow,
+)
+from homeassistant.const import CONF_FILE_PATH, CONF_NAME
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class LvglPagesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class LvglPagesConfigFlow(ConfigFlow, domain=DOMAIN):
     """LVGL Pages config flow."""
 
     VERSION = 0
     MINOR_VERSION = 1
     data = None
     options = None
-    _reauth_entry: config_entries.ConfigEntry | None = None
+    _reauth_entry: ConfigEntry | None = None
+
+    async def _validate_file_path(self, file_path: str) -> bool:
+        """Ensure the file path is valid."""
+        return await self.hass.async_add_executor_job(
+            self.hass.config.is_allowed_path, file_path
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle initial user step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.data = user_input
-            # Add those that are not optional
+            self._async_abort_entries_match(user_input)
+            # await self.async_set_unique_id(self.data[CONF_NAME])
+            # self._abort_if_unique_id_configured()
 
-            self.options = {}
+            if not user_input[CONF_NAME]:
+                errors[CONF_NAME] = "empty"
+            if not await self._validate_file_path(user_input[CONF_FILE_PATH]):
+                errors[CONF_FILE_PATH] = "not_allowed"
+            else:
+                title = f"{user_input[CONF_NAME]} [{user_input[CONF_FILE_PATH]}]"
+                self.data = deepcopy(user_input)
+                self.options = {}
 
-            await self.async_set_unique_id(self.data[ATTR_NAME])
-            self._abort_if_unique_id_configured()
-
-            _LOGGER.debug(
-                'Creating entry "%s" with data "%s"',
-                self.unique_id,
-                self.data,
-            )
-            return self.async_create_entry(
-                title=self.data[ATTR_NAME], data=self.data, options=self.options
-            )
+                _LOGGER.debug(
+                    'Creating entry "%s" with data "%s"',
+                    self.unique_id,
+                    self.data,
+                )
+                return self.async_create_entry(
+                    title=title, data=self.data, options=self.options
+                )
 
         schema = vol.Schema(
             {
-                vol.Required(ATTR_NAME): str,
+                vol.Required(CONF_NAME): str,
+                vol.Required(CONF_FILE_PATH): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
             }
         )
 
@@ -62,3 +85,30 @@ class LvglPagesConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # description_placeholders=placeholders,
             errors=errors,
         )
+
+
+# class LvglPagesOptionsFlow(OptionsFlow):
+#     """Handle File options."""
+
+#     async def async_step_init(
+#         self, user_input: dict[str, Any] | None = None
+#     ) -> ConfigFlowResult:
+#         """Manage File options."""
+#         if user_input:
+#             return self.async_create_entry(data=user_input)
+
+#         schema = vol.Schema(
+#             {
+#                 # vol.Required(CONF_NAME): str,
+#                 vol.Required(CONF_FILE_PATH): TextSelector(
+#                     TextSelectorConfig(type=TextSelectorType.TEXT)
+#                 ),
+#             }
+#         )
+
+#         return self.async_show_form(
+#             step_id="init",
+#             data_schema=self.add_suggested_values_to_schema(
+#                 schema, self.config_entry.options or {}
+#             ),
+#         )

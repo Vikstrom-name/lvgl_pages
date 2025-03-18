@@ -7,4 +7,12 @@ While several examples exists and modulare imports is possible the interaction b
 
 The idea with this Home Assistant integration is to automate some of this, similar as NS Panel automation blueprint selects entities from Home Assistant and then creates graphics for display. Automatically keeping track of connection between buttons and entities.
 
+A folder withing ESPHome config path should be made available in Home Assistant to allow creating files inside it.
+
+```yaml
+homeassistant:
+  allowlist_external_dirs:
+    - "/config/esphome/panels"
+```
+
 > NOTE: It's still work-in-progress  a long way to go until anything generally useful!

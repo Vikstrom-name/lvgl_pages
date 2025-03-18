@@ -9,11 +9,11 @@
             }
         },
         "error": {
-            "name_exists": "Name already exists",
-            "invalid_template": "The template is invalid"
+            "empty": "Cannot be empty",
+            "not_allowed": "The given file path is not allowed"
         },
         "abort": {
-            "already_configured": "Already configured with the same settings or name"
+            "already_configured": "Already configured with the same name and settings"
           }
     }
 }

@@ -2,24 +2,16 @@
 
 from __future__ import annotations
 
-import datetime as dt
 import logging
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_DEVICE_ID, CONF_FILE_PATH, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_state_change_event,
-    async_track_time_change,
-)
-from homeassistant.util import dt as dt_util
 
 from .config_flow import LvglPagesConfigFlow
 from .const import DOMAIN
@@ -31,40 +23,63 @@ PLATFORMS = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
-    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
+    filepath: str = config_entry.data[CONF_FILE_PATH]
+    if not await hass.async_add_executor_job(hass.config.is_allowed_path, filepath):
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="dir_not_allowed",
+            translation_placeholders={"filename": filepath},
+        )
 
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
     if config_entry.entry_id not in hass.data[DOMAIN]:
         pages = LvglPagesCoordinator(hass, config_entry)
-        await pages.async_setup()
+        # await pages.async_setup()
         hass.data[DOMAIN][config_entry.entry_id] = pages
 
-    if config_entry is not None:
-        if config_entry.source == SOURCE_IMPORT:
-            hass.async_create_task(
-                hass.config_entries.async_remove(config_entry.entry_id)
-            )
-            return False
+    # await hass.config_entries.async_forward_entry_setups(
+    #     config_entry, [Platform(config_entry.data[CONF_PLATFORM])]
+    # )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    async def write_config(call):
+        """Execute a service with an action command to Easee charging station."""
+        _LOGGER.debug("Call write config %s", call.data)
+
+        # ToDo: Implement write_config
+
+        raise HomeAssistantError(f"Could not write config: {call.data}")
+
+    hass.services.async_register(
+        DOMAIN,
+        service="write_config",
+        service_func=write_config,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_DEVICE_ID): cv.string,
+                vol.Optional("page_1"): cv.string,
+                vol.Optional("widget_1"): cv.string,
+            },
+            required=True,
+        ),
+    )
+
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
+
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unloading a config_flow entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        pages = hass.data[DOMAIN].pop(entry.entry_id)
-        # pages.cleanup()
-    return unload_ok
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        entry, [entry.data[CONF_PLATFORM]]
+    )
 
 
-async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Reload the config entry."""
-    await async_unload_entry(hass, config_entry)
-    await async_setup_entry(hass, config_entry)
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -139,13 +154,6 @@ class LvglPagesCoordinator:
         #         res[k] = {"id": i, "value": self.get_number_entity_value(i)}
         return res
 
-    async def async_setup(self):
-        """Post initialization setup."""
-        # Ensure an update is done on every hour
-        # self._hourly_update = async_track_time_change(
-        #     self._hass, self.scheduled_update, minute=0, second=0
-        # )
-
     @property
     def name(self) -> str:
         """Name of pages."""
@@ -160,11 +168,6 @@ class LvglPagesCoordinator:
             entry_type=DeviceEntryType.SERVICE,
             # model="Forecast",
         )
-
-    def scheduled_update(self, _):
-        """Scheduled updates callback."""
-        _LOGGER.debug("Scheduled callback")
-        self.update()
 
     def update(self):
         """Update the pages."""

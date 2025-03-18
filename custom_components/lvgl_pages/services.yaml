@@ -1,0 +1,20 @@
+write_config:
+  fields:
+    device_id:
+      required: true
+      example: "b40f1f45d28b0891fe8d"
+      selector:
+        device:
+          integration: "esphome"
+    page_1:
+      required: true
+      example: "Page 1"
+      selector:
+        text:
+          type: text
+    widget_1:
+      required: true
+      se  lector:
+        entity:
+          domain: "switch"
+          # translation_key: action_command
