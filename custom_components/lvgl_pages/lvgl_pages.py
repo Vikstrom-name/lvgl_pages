@@ -16,6 +16,7 @@ except ImportError:
         from const import PageTypes, WidgetTypes
     except ImportError:
         _LOGGER.error("Import error from local")
+        raise
 
 
 class Widget:
@@ -133,6 +134,7 @@ class Page:
             "bg_color": "black",
             "bg_opa": "cover",
             "pad_all": 5,
+            "widgets": [w.get_lvgl() for w in self._widgets],
         }
         if self.page_type == PageTypes.Flex:
             page["layout"] = {
@@ -150,11 +152,11 @@ class Page:
             }
         else:
             raise ValueError(f"Invalid page type {self.page_type}")
+
         if multi_page:
             page.update(
                 self._SWIPE_NAVIGATION
             )  # ToDo: Make this a reusable object reference in yaml
-        page["widgets"] = [w.get_lvgl() for w in self._widgets]
         return page
 
     # def as_dict(self):
@@ -191,6 +193,7 @@ class LvglPages:
         output_data = {"pages": []}
         for page in self._pages:
             output_data["pages"].append(page.get_lvgl(multi_page=len(self._pages) > 1))
+        yaml.Dumper.ignore_aliases = lambda *args: True
         return yaml.dump(output_data, allow_unicode=True)
 
     # def get_lights(self) -> str:
@@ -211,6 +214,13 @@ if __name__ == "__main__":
         icon="mdi:lightbulb",
     )
     r2_widget = main_page.new_widget(
+        widget_type=WidgetTypes.Button,
+        height=50,
+        text="Toggle",
+        icon="mdi:lightbulb",
+    )
+    info_page = lvgl_pages.new_page("info_page")
+    r3_widget = info_page.new_widget(
         widget_type=WidgetTypes.Button,
         height=50,
         text="Toggle",
