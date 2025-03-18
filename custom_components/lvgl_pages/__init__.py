@@ -26,7 +26,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -144,9 +144,9 @@ class LvglPages:
     async def async_setup(self):
         """Post initialization setup."""
         # Ensure an update is done on every hour
-        self._hourly_update = async_track_time_change(
-            self._hass, self.scheduled_update, minute=0, second=0
-        )
+        # self._hourly_update = async_track_time_change(
+        #     self._hass, self.scheduled_update, minute=0, second=0
+        # )
 
     @property
     def name(self) -> str:
