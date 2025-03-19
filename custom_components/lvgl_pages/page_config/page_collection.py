@@ -1,5 +1,6 @@
 """LVGL Pages core function."""
 
+from enum import Enum
 import logging
 import sys
 import uuid
@@ -8,21 +9,24 @@ import yaml
 
 _LOGGER = logging.getLogger(__name__)
 
-try:  # Local import differs if run from console or imported in HA
-    from .const import PageTypes, WidgetTypes
-except ImportError:
-    _LOGGER.error("Import error from context")
-    try:
-        from const import PageTypes, WidgetTypes
-    except ImportError:
-        _LOGGER.error("Import error from local")
-        raise
-
 
 def dict_to_yaml_str(config: dict) -> str:
     """Convert a dictionary to a YAML string."""
     yaml.Dumper.ignore_aliases = lambda *args: True
     return yaml.dump(config, allow_unicode=True)
+
+
+class PageTypes(Enum):
+    """Standard numeric identifiers for page types."""
+
+    Flex = 0
+    Grid = 1
+
+
+class WidgetTypes(Enum):
+    """Standard numeric identifiers for widget types."""
+
+    LightButton = 0
 
 
 class Widget:
@@ -191,26 +195,27 @@ class LvglPages:
 
 
 if __name__ == "__main__":
+    # To run from command line, mostly for testing during development.
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 
     _LOGGER.info("Running test")
     lvgl_pages = LvglPages()
     main_page = lvgl_pages.new_page("main_page")
     r1_widget = main_page.new_widget(
-        widget_type=WidgetTypes.Button,
+        widget_type=WidgetTypes.LightButton,
         height=50,
         text="Toggle",
         icon="mdi:lightbulb",
     )
     r2_widget = main_page.new_widget(
-        widget_type=WidgetTypes.Button,
+        widget_type=WidgetTypes.LightButton,
         height=50,
         text="Toggle",
         icon="mdi:lightbulb",
     )
     info_page = lvgl_pages.new_page("info_page")
     r3_widget = info_page.new_widget(
-        widget_type=WidgetTypes.Button,
+        widget_type=WidgetTypes.LightButton,
         height=50,
         text="Toggle",
         icon="mdi:lightbulb",
