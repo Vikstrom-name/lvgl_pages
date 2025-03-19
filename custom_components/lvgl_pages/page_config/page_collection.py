@@ -104,18 +104,6 @@ class Page:
             {"lvgl.page.previous": {"animation": "OUT_LEFT", "time": "300ms"}},
         ],
     }
-    #   on_swipe_right:
-    #       - lambda: 'lv_indev_wait_release(lv_indev_get_act());'
-    #       - logger.log: "Swipe right"
-    #       - lvgl.page.next:
-    #           animation: OUT_RIGHT
-    #           time: 300ms
-    #   on_swipe_left:
-    #       - lambda: 'lv_indev_wait_release(lv_indev_get_act());'
-    #       - logger.log: "Swipe left"
-    #       - lvgl.page.previous:
-    #           animation: OUT_LEFT
-    #           time: 300ms}
 
     _widgets: list[Widget] = []
 
@@ -130,7 +118,7 @@ class Page:
         self._widgets.append(widget)
         return widget
 
-    def get_lvgl(self, multi_page: bool) -> dict:
+    def get_lvgl(self) -> dict:
         """Return the page as a dictionary."""
         page = {
             "id": self.page_id,
@@ -138,6 +126,7 @@ class Page:
             "bg_color": "black",
             "bg_opa": "cover",
             "pad_all": 5,
+            **self._SWIPE_NAVIGATION,
             "widgets": [w.get_lvgl() for w in self._widgets],
         }
         if self.page_type == PageTypes.Flex:
@@ -157,10 +146,6 @@ class Page:
         else:
             raise ValueError(f"Invalid page type {self.page_type}")
 
-        if multi_page:
-            page.update(
-                self._SWIPE_NAVIGATION
-            )  # ToDo: Make this a reusable object reference in yaml
         return page
 
 
@@ -186,7 +171,7 @@ class LvglPages:
         """Return the LVGL Pages as a YAML string."""
         output_data = {"pages": []}
         for page in self._pages:
-            output_data["pages"].append(page.get_lvgl(multi_page=len(self._pages) > 1))
+            output_data["pages"].append(page.get_lvgl())
         return dict_to_yaml_str(output_data)
 
     # def get_all_lights(self) -> str:
