@@ -10,12 +10,12 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT
-from homeassistant.helpers import selector
+from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 
 SCHEMA_COPY = vol.Schema(
     {
-        vol.Required(ATTR_NAME): str,
+        vol.Required(CONF_NAME): str,
+        vol.Required(CONF_FILE_PATH): str,
     }
 )
 

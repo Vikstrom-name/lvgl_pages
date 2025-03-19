@@ -14,7 +14,7 @@ write_config:
           type: text
     widget_1:
       required: true
-      se  lector:
+      selector:
         entity:
           domain: "switch"
           # translation_key: action_command

@@ -11,13 +11,11 @@ from custom_components.lvgl_pages import LvglPagesCoordinator
 #     mock_integration,
 #     mock_platform,
 # )
-from custom_components.lvgl_pages.const import (
-    DOMAIN,
-)
+from custom_components.lvgl_pages.const import DOMAIN
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_NAME, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 
 # from homeassistant.components import sensor
 # from homeassistant.core import HomeAssistant
@@ -27,7 +25,8 @@ NAME = "My Pages 1"
 
 CONF_ENTRY = config_entries.ConfigEntry(
     data={
-        ATTR_NAME: NAME,
+        CONF_NAME: NAME,
+        CONF_FILE_PATH: "/config/lvgl_pages/",
     },
     options={},
     domain=DOMAIN,
