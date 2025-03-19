@@ -15,5 +15,25 @@
         "abort": {
             "already_configured": "Already configured with the same name and settings"
           }
+    },
+    "services": {
+        "write_config": {
+            "description": "Write config to files",
+            "name": "Write config",
+            "fields": {
+                "device_id": {
+                    "description": "Select the command to execute",
+                    "name": "Target device"
+                },
+                "page_1": {
+                "description": "Name of the page",
+                "name": "Name"
+                },
+                "widget_1": {
+                "description": "Name of widget 1",
+                "name": "Widget 1"
+                }
+            }
+        }
     }
 }
