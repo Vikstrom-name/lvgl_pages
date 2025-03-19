@@ -6,15 +6,14 @@ write_config:
       selector:
         device:
           integration: "esphome"
-    page_1:
+    page_name:
       required: true
-      example: "Page 1"
+      example: "Main page"
       selector:
         text:
           type: text
     widget_1:
-      required: true
+      required: false
       selector:
         entity:
           domain: "switch"
-          # translation_key: action_command

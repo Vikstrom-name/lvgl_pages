@@ -52,7 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         schema=vol.Schema(
             {
                 vol.Required(CONF_DEVICE_ID): cv.string,
-                vol.Optional("page_1"): cv.string,
+                vol.Required("page_name"): cv.string,
                 vol.Optional("widget_1"): cv.string,
             },
             required=True,
@@ -167,6 +167,10 @@ class LvglPagesCoordinator:
     def update(self):
         """Update the pages."""
         _LOGGER.debug("Updating pages")
+
+    def export_config(self):
+        """Export the configuration."""
+        _LOGGER.debug("Exporting configuration")
 
     async def write_config(self, call):
         """Execute a service with an action command to Easee charging station."""
