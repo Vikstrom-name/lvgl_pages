@@ -3,20 +3,19 @@
 from __future__ import annotations
 
 import logging
-import os
 import pathlib
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_FILE_PATH, CONF_PLATFORM, Platform
-from homeassistant.core import HomeAssistant, HomeAssistantError
+from homeassistant.core import HomeAssistant, HomeAssistantError, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
-from .config_flow import LvglPagesConfigFlow
 from .const import DOMAIN
+from .page_config import Page, PageTypes, WidgetTypes, dict_to_yaml_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.services.async_register(
         DOMAIN,
         service="write_config",
-        service_func=pages.write_config,
+        service_func=pages.service_config_compose,
         schema=vol.Schema(
             {
                 vol.Required(CONF_DEVICE_ID): cv.string,
@@ -139,7 +138,6 @@ class LvglPagesCoordinator:
         """Initialize my coordinator."""
         self._hass = hass
         self._config = config_entry
-        self._state_change_listeners = []
 
     def as_dict(self):
         """For diagnostics serialization."""
@@ -168,18 +166,27 @@ class LvglPagesCoordinator:
         """Update the pages."""
         _LOGGER.debug("Updating pages")
 
-    def export_config(self):
+    def _try_compose_page(self) -> Page:
+        _LOGGER.debug("Composing configuration")
+        page = Page(self._config.options["page_name"], page_type=PageTypes.Flex)
+        page.new_widget(
+            widget_type=WidgetTypes.LocalLightButton,
+            height=50,
+            text=self._config.options["widget_1"],
+            icon="mdi:lightbulb",
+        )
+        return page
+
+    def _export_config(self) -> bool:
         """Export the configuration."""
+        page = self._try_compose_page()
+        if page is None:
+            return False
+
         _LOGGER.debug("Exporting configuration")
-
-    async def write_config(self, call):
-        """Execute a service with an action command to Easee charging station."""
-        _LOGGER.debug("Call write config %s", call.data)
-
         export_path = pathlib.Path(self._config.data[CONF_FILE_PATH]).joinpath(
             self._config.data["name"]
         )
-
         try:
             export_path.mkdir(parents=True, exist_ok=True)
         except OSError as e:
@@ -187,10 +194,16 @@ class LvglPagesCoordinator:
 
         try:
             with open(export_path.joinpath("lvgl.yaml"), "w", encoding="utf8") as f:
-                f.write("Hello, World!")
+                f.write(dict_to_yaml_str(page.get_lvgl()))
             with open(export_path.joinpath("assets.yaml"), "w", encoding="utf8") as f:
-                f.write("Hello, World!")
+                f.write(dict_to_yaml_str(page.get_assets()))
         except OSError as e:
             raise HomeAssistantError("Could not write config") from e
 
         return True
+
+    async def service_config_compose(self, call: ServiceCall):
+        """Execute a service with an action command to Easee charging station."""
+        _LOGGER.debug("Call compose config service %s", call.data)
+        self._config.options = call.data
+        return await self._hass.async_add_executor_job(self._export_config)
